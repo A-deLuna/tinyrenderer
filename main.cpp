@@ -24,13 +24,16 @@ Texture TEXTURE_SPEC;
 #include "parsers.cpp"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void PaintWindow(HWND hwnd) ;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow)
 {
-//  AllocConsole();
-//  freopen("CONIN$", "r",stdin);
-//freopen("CONOUT$", "w",stdout);
-//freopen("CONOUT$", "w",stderr);
+#if 0
+  AllocConsole();
+  freopen("CONIN$", "r",stdin);
+  freopen("CONOUT$", "w",stdout);
+  freopen("CONOUT$", "w",stderr);
+#endif
   // Register the window class.
   const wchar_t CLASS_NAME[]  = L"Tony's 3D Renderer";
 
@@ -61,14 +64,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
   HWND hwnd = CreateWindowEx(
       0,                              // Optional window styles.
       CLASS_NAME,                     // Window class
-      L"Learn to Program Windows",    // Window text
+      L"Tony's awesome renderer",    // Window text
       WS_OVERLAPPEDWINDOW,            // Window style
 
       // Size and position
       //CW_USEDEFAULT, CW_USEDEFAULT,
       1500, 700,
       //CW_USEDEFAULT, CW_USEDEFAULT,
-      1200, 1200,
+      800, 800,
 
       NULL,       // Parent window    
       NULL,       // Menu
@@ -90,6 +93,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
   {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
+    PaintWindow(hwnd);
   }
   FreeConsole();
 
@@ -97,24 +101,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
   return 0;
 }
 
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-  switch (uMsg)
-  {
-    case WM_DESTROY:
-      PostQuitMessage(0);
-      return 0;
-
-    case WM_SIZE:
-    {
-
-    }
-    return 0;
-    case WM_PAINT:
-      {
+void PaintWindow(HWND hwnd) {
+        //PAINTSTRUCT paint;
+        //BeginPaint(hwnd, &paint);
         HDC hdc = GetDC(hwnd);
-
         RECT rect;
         GetClientRect(hwnd, &rect);
         Bitmap bitmap;
@@ -137,6 +127,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           bitmap.shadow_buffer[i] = -9999999.0;
         }
         Draw(bitmap);
+        //EndPaint(hwnd, &paint);
         int success = StretchDIBits(hdc,
             0, 0, bitmap.width, bitmap.height,
             0, 0, bitmap.width, bitmap.height,
@@ -148,55 +139,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         free(bitmap.buffer);
         free(bitmap.z_buffer);
         free(bitmap.shadow_buffer);
+}
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  switch (uMsg)
+  {
+    case WM_DESTROY:
+      PostQuitMessage(0);
+      return 0;
+
+    case WM_SIZE:
+    {
+
+    }
+    return 0;
+    case WM_PAINT:
+      {
+      //PaintWindow(hwnd);
       }
       return 0;
 
   }
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
-
-
-void DrawLine(Bitmap bitmap, LONG x0, LONG y0, LONG x1, LONG y1, Color color) {
-  bool steep = false;
-  if (abs(x0-x1) < abs(y0-y1)) {
-    int tmp = x0;
-    x0 = y0;
-    y0 = tmp;
-    tmp = x1;
-    x1 = y1;
-    y1 = tmp;
-    steep = true;
-  }
-  if (x0 > x1) {
-    int tmp = x0;
-    x0 = x1;
-    x1 = tmp;
-    tmp = y0;
-    y0 = y1;
-    y1 = tmp;
-  }
-  int dx = x1 - x0;
-  int dy = y1 - y0;
-  int derror = abs(dy) * 2;
-  int error = 0;
-  int y = y0;
-  
-  for (int x = x0; x <= x1; x++) {
-    if (steep) {
-      bitmap.buffer[y + x * bitmap.width] = color.ToHex();
-    } else {
-      bitmap.buffer[x + y * bitmap.width] = color.ToHex();
-    }
-    error += derror;
-    if (error > dx) {
-      y += (y1 > y0 ? 1 : -1);
-      error -= dx * 2;
-    }
-  }
-
-}
-
-
-Vec3 GetNormalFromTexture(Vec3 texture);
-
-

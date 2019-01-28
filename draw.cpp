@@ -1,11 +1,35 @@
 Vec3 CAMERA = {0.0 ,0.5, 3.0};
-Vec3 LIGHT = {0.4, 3.0, 3.0};
+Vec3 LIGHT = v3_norm({0, 3.0, 1.0});
+
+void UpdateCamera() {
+  static float angle = 0.0f;
+  float s = sinf(angle);
+  float c = cosf(angle);
+  
+  CAMERA ={3.0f * s, .5f, 3.0f * c};
+  angle += 0.02;
+  if(angle > 2 * 3.1416) {
+    angle = 0;
+  }
+
+}
+void UpdateLight() {
+  static float angle = .7f;
+  float s = sinf(angle);
+  float c = cosf(angle);
+  
+  LIGHT = v3_norm({3.0f * s, 3.0f, 3.0f * c});
+  angle += 0.02;
+  if(angle > 2 * 3.1416) {
+    angle = 0;
+  }
+}
 
 RECT BoundingBox(Vec3 v0, Vec3 v1, Vec3 v2) {
   RECT r;
-  r.left = min(v0.x, min(v1.x, v2.x));
+  r.left = max(0.0, min(v0.x, min(v1.x, v2.x)));
   r.right = max(v0.x, max(v1.x, v2.x));
-  r.bottom = min(v0.y, min(v1.y, v2.y));
+  r.bottom = max(0.0, min(v0.y, min(v1.y, v2.y)));
   r.top = max(v0.y, max(v1.y, v2.y));
   return r; 
 }
@@ -103,6 +127,7 @@ Color FragmentShader(Bitmap bitmap, Vec3 bari, mat4_t texture_matrix, mat4_t ver
   Vec3 vertice = m4_mul_pos(vertex_matrix, bari);
   Vec3 shadow_screenspace = m4_mul_pos(TO_SHADOW, vertice);
   int shadow_idx = (int)(shadow_screenspace.x)  + (int)(shadow_screenspace.y) * bitmap.width;
+  shadow_idx = max(0, shadow_idx);
   float shadow = 1.0;
   if (shadow_screenspace.z < bitmap.shadow_buffer[shadow_idx] - 8) {
     shadow = 0.1;
@@ -202,7 +227,9 @@ void DrawFace(Bitmap bitmap, FragShaderFunc frag_shader)  {
 }
 
 void Draw(Bitmap bitmap) {
-  PERSPECTIVE = -1.0/v3_length(LIGHT);
+  UpdateCamera();
+  UpdateLight();
+  PERSPECTIVE = 0;
   SetupCamera(LIGHT);
   DrawFace(bitmap, &VoidShader);
   float* tmp = bitmap.z_buffer;
